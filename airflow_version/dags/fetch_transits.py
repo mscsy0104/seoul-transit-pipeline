@@ -11,6 +11,9 @@ load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
 
+if not API_KEY:
+    raise ValueError("API_KEY가 환경변수로 설정되지 않았습니다.")
+
 
 @task
 def test_fetch_data():
@@ -40,3 +43,12 @@ def fetch_data():
 
     with open('./data/ksccPatternStation.xml', "w", encoding="utf-8") as f:
         f.write(xml_data)
+
+with DAG(
+    dag_id="fetch_trasit_data",
+    start_date=datetime(2024, 9, 25),
+    catchup=False,
+    tags=['main'],
+    schedule='0 2 * * *'
+) as dag:
+    test_fetch_data()

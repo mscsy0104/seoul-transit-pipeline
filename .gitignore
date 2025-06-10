@@ -46,6 +46,9 @@ __pycache__
 *$py.class
 
 # C extensions
+
+# VSCode
+.vscode/
 *.so
 
 # Distribution / packaging
