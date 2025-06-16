@@ -4,6 +4,11 @@
 # result
 data/
 logs/
+*.xml
+*.csv
+
+# test
+test/
 
 ### macOS ###
 # General
