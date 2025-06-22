@@ -6,11 +6,12 @@ import re
 from datetime import datetime
 import glob
 import logging
-import dotenv
 
 load_dotenv()
 LOGS_FOLDER = os.getenv("LOGS_FOLDER")
 DATA_FOLDER = os.getenv("DATA_FOLDER")
+
+API_KEY = os.getenv("API_KEY")
 
 # Configure logging
 logging.basicConfig(
@@ -22,9 +23,6 @@ logging.basicConfig(
     ]
 )
 
-load_dotenv()
-
-API_KEY = os.getenv("API_KEY")
 
 
 def ensure_directory_exists(filename):
