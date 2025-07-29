@@ -36,7 +36,8 @@ csv_files = sorted(glob(os.path.join(parsed_dir, '*.csv')), key=os.path.getmtime
 
 print(f"CSV 파일 개수: {len(csv_files)}")
 print("최근 5개 파일명:")
-
+for fname in csv_files[:5]:
+    print(os.path.basename(fname))
 
 
 conn = connect_pymysql()

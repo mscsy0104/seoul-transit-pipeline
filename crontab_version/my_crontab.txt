@@ -1,0 +1,4 @@
+# 깃 공개를 위해 /path로 변경
+* * * * * /path/crontab_version/run_with_pyenv.sh
+
+* * * * * /path/crontab_version/fetch_data.py >> /path/to/crontab_log.txt 2>&1
