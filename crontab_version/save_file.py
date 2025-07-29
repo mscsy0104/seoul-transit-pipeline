@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import logging
 
 from database import *
-from parse_data import parse_xml
+from crontab_version.parse_data import parse_xml
 
 
 load_dotenv()

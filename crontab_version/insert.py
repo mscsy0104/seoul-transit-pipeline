@@ -23,7 +23,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(os.path.join(LOGS_FOLDER, "save_csv_data.log")),
+        logging.FileHandler(os.path.join(LOGS_FOLDER, "load_csv_data.log")),
         logging.StreamHandler(sys.stdout)
     ]
 )

@@ -29,7 +29,7 @@ def test_connect_pymysql():
     except pymysql.Error as e:
         raise e
         
-    print('연결완료, 연결제공')
+    print('testDB 연결완료, 연결제공')
 
     return conn
 
@@ -50,7 +50,7 @@ def connect_pymysql():
     except pymysql.Error as e:
         raise e
         
-    print('연결완료, 연결제공')
+    print('transitDB 연결완료, 연결제공')
 
     return conn
 
@@ -61,6 +61,6 @@ def connect_sqlalchemy():
     
     connection_string = f"mysql+pymysql://{user}:{password}@{db_host}:{port}/{db_name}?charset=utf8"
     engine = create_engine(connection_string)
-    print('연결완료, 엔진제공')
+    print('transitDB 연결완료, 엔진제공')
 
     return engine
