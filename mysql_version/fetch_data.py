@@ -48,6 +48,7 @@ def fetch_bulk_data(total_cnt):
         end_idx = i + step - 1 if i + step - 1 < end else end
         logging.info(f"Fetching data from {start_idx} to {end_idx}")
 
+        # ex. http://openapi.seoul.go.kr:8088/(인증키)/xml/ksccPatternStation/1/5/
         url = f'http://openapi.seoul.go.kr:8088/{API_KEY}/xml/ksccPatternStation/{start_idx}/{end_idx}'
 
         try:

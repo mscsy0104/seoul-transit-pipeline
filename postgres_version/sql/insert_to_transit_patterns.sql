@@ -1,0 +1,1 @@
+INSERT INTO transit_patterns (CRTR_DD, PRPS_PTRN, TNOPE, TNOPE_GNRL, TNOPE_KID, TNOPE_YOUT, TNOPE_ELDR, TNOPE_PWDBS, FILE_PATH) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
