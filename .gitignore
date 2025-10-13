@@ -6,6 +6,7 @@ data/
 logs/
 *.xml
 *.csv
+*.json
 
 # test
 test/
@@ -53,7 +54,6 @@ __pycache__
 # C extensions
 
 # VSCode
-.vscode/
 *.so
 
 # Distribution / packaging

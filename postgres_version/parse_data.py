@@ -3,6 +3,7 @@ import pandas as pd
 import logging
 import os
 import sys
+import glob
 from dotenv import load_dotenv
 
 from utils import ensure_dir_exists
@@ -11,6 +12,7 @@ load_dotenv()
 
 TEST_XML_FILE = os.getenv("TEST_XML_FILE")
 DATA_PARSED_DIR = os.getenv("DATA_PARSED_DIR")
+DATA_DIR = os.getenv("DATA_DIR")
 DB_KIND = "postgres"
 
 def parse_xml(file):
@@ -54,9 +56,23 @@ def test_parse_and_save_xml():
         df.to_csv(f, index=False)
 
 
+def process_xml_files():
+
+    xml_files = glob.glob(os.path.join(DATA_DIR, DB_KIND, "*.xml"))
+    print(f"총 {len(xml_files)}개의 파일 발견")
+
+    for file in xml_files:
+        df = parse_xml(file)
+        filename = os.path.join(DATA_PARSED_DIR, DB_KIND, f"{os.path.basename(file).split(".")[0]}.csv")
+        ensure_dir_exists(filename)
+        df.to_csv(filename, index=False)
+
+
 try:
     if len(sys.argv) > 1 and sys.argv[1] == "test":
         test_parse_and_save_xml()
+    elif len(sys.argv) > 1 and sys.argv[1] == "process":
+        process_xml_files()
     else:
         pass
 except Exception as e:

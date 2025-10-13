@@ -1,10 +1,5 @@
 import os
 from dotenv import load_dotenv
-import sys
-import requests
-from datetime import datetime
-import glob
-import logging
 import psycopg2
 
 

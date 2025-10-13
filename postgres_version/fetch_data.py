@@ -12,7 +12,7 @@ from utils import measure_time, ensure_dir_exists
 load_dotenv()
 LOGS = os.getenv("LOGS")
 DATA_DIR = os.getenv("DATA_DIR")
-DB_KIND = "postgres"
+DB_KIND = os.getenv("DB_KIND")
 
 API_KEY = os.getenv("API_KEY")
 
@@ -99,7 +99,7 @@ def fetch_bulk_data(total_cnt):
 def fetch_incremental_data(total_cnt):
     print(f"Starting incremental data fetch for total count: {total_cnt}")
 
-    list_of_files = glob.glob(os.path.join(DATA_DIR, '/*'))
+    list_of_files = glob.glob(os.path.join(DATA_DIR, DB_KIND, '*.xml'))
     print(f"list_of_files: {list_of_files}")
     # list_of_files = glob.glob(os.path.join(os.getcwd(), 'data/*'))
     if list_of_files:
@@ -110,7 +110,7 @@ def fetch_incremental_data(total_cnt):
         print("No files found in the data directory. Check the env file.")
         return
     
-    start = int(latest_file.split('_')[3]) + 1
+    start = int(latest_file.split('_')[2]) + 1
     end = total_cnt
 
     diff = end - start + 1
@@ -136,9 +136,10 @@ def fetch_incremental_data(total_cnt):
             continue
 
     for data in xml_data:
-        today = datetime.now().strftime("%Y%m%d%H%M%S")
+        # today = datetime.now().strftime("%Y%m%d%H%M%S")
+        last_idx = int(latest_file.split('_')[3].split('.')[0]) + 1
         start_idx, end_idx, res_text = data
-        filename = os.path.join(DATA_DIR, DB_KIND, f'ksccPatternStation_{start_idx}_{end_idx}_{today}.xml')
+        filename = os.path.join(DATA_DIR, DB_KIND, f'ksccPatternStation_{start_idx}_{end_idx}_{last_idx}.xml')
         ensure_dir_exists(filename)
         with open(filename, "w", encoding="utf-8") as f:
             f.write(res_text)
@@ -158,5 +159,5 @@ try:
         pass
 except Exception as e:
     # critical
-    print(f"Unhandled exception: {e}", exc_info=True)
+    print(f"Unhandled exception: {e}")
     raise e

@@ -7,5 +7,10 @@ if __name__ == "__main__":
             cur.execute("SELECT version();")
             version = cur.fetchone()
             print(f"[DB 연결 성공] PostgreSQL version: {version[0]}")
+
+            cursor = conn.cursor()
+            print(cursor.connection.get_dsn_parameters())
+            print("-"*100)
+            conn.close()
     except Exception as e:
         print(f"[DB 연결 실패] {e}")
