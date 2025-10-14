@@ -10,7 +10,11 @@ def measure_time(func):
         result = func(*args, **kwargs)
         end_time = time.time()
         elapsed_time = end_time - start_time
+        print("-"*100)
+        print()
         print(f"{func.__name__} completed in {elapsed_time:.2f} seconds")
+        print()
+        print("-"*100)
         return result
     return wrapper
 

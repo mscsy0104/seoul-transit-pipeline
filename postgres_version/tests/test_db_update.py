@@ -2,12 +2,6 @@ from postgres_version.db.insert import insert_data_to_transit_db
 import pandas as pd
 from datetime import datetime
 
-example_path = "/Users/sychoi/projects/seoul-transit-pipeline/data_parsed/postgres/example.csv"
-df = pd.read_csv(example_path)
-
-print(f"CSV 데이터 로드 완료: {len(df)}개 행")
-print("첫 5행 데이터:")
-print(df.head())
 
 def process_row(row):
     """CSV 행을 데이터베이스에 맞게 변환"""
@@ -38,6 +32,13 @@ def process_row(row):
         safe_int(row['TNOPE_PWDBS'])      # disabled_people
     )
 
+# ---------------------------------------
+example_path = "/Users/sychoi/projects/seoul-transit-pipeline/data_parsed/postgres/example.csv"
+df = pd.read_csv(example_path)
+
+print(f"CSV 데이터 로드 완료: {len(df)}개 행")
+print("첫 5행 데이터:")
+print(df.head())
 # 테스트로 처음 5개 행만 처리
 print("\n처리할 데이터 샘플:")
 for i, (_, row) in enumerate(df.head(5).iterrows()):

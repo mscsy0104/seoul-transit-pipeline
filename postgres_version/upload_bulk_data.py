@@ -46,13 +46,10 @@ def process_row(row):
     )
 
 
-
+today = datetime.now().strftime("%Y%m%d")
 files = glob.glob(os.path.join(DATA_PARSED_DIR, DB_KIND, "*.csv"))
 
-# example_path = "/Users/sychoi/projects/seoul-transit-pipeline/data_parsed/postgres/example.csv"
-# df = pd.read_csv(example_path)
-
-# pprint(files)
+files_to_upload = []
 for file in files:
     if os.path.basename(file) == "example.csv":
         continue
@@ -62,6 +59,17 @@ for file in files:
         print(f"빈 파일 건너뛰기: {os.path.basename(file)}")
         continue
 
+    if today in file:
+        files_to_upload.append(file)
+
+print("-"*100)
+print()
+print(f"files_to_upload: {len(files_to_upload)}")
+pprint([os.path.basename(f) for f in files_to_upload])
+print()
+print("-"*100)
+
+for file in files_to_upload:
     try:
         df = pd.read_csv(file)
         # print(f"df 행 수:{len(df)}")
