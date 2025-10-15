@@ -52,7 +52,9 @@ class DatabaseQueries:
                 disabled_people,
                 created_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT ON CONSTRAINT unique_pattern_per_day
+            DO NOTHING;"""
     
     @staticmethod
     def insert_batch_data_to_table(schema_name, table_name):
@@ -65,9 +67,12 @@ class DatabaseQueries:
                 kid_people,
                 youth_people,
                 elder_people,
-                disabled_people
+                disabled_people,
+                created_at
             )
-            VALUES %s"""
+            VALUES %s
+            ON CONFLICT ON CONSTRAINT unique_pattern_per_day
+            DO NOTHING;"""
 
 
 class DatabaseCheckQueries:

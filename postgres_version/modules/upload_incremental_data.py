@@ -6,7 +6,7 @@ import glob
 import os
 from dotenv import load_dotenv
 
-from postgres_version.db.insert_bulk import insert_bulk_to_transit_db
+from postgres_version.db.insert_bulk import insert_bulk_incremental_to_transit_db
 
 load_dotenv()
 
@@ -34,6 +34,8 @@ def process_row(row):
         except (ValueError, TypeError):
             return 0
     
+    created_at = datetime.now()
+    
     return (
         create_date,                      # create_date (bigint)
         str(row['PRPS_PTRN']),            # purpose_pattern
@@ -42,34 +44,48 @@ def process_row(row):
         safe_int(row['TNOPE_KID']),       # kid_people
         safe_int(row['TNOPE_YOUT']),      # youth_people
         safe_int(row['TNOPE_ELDR']),      # elder_people
-        safe_int(row['TNOPE_PWDBS'])      # disabled_people
+        safe_int(row['TNOPE_PWDBS']),     # disabled_people
+        created_at                        # created_at
     )
 
 
-today = datetime.now().strftime("%Y%m%d")
-files = glob.glob(os.path.join(DATA_PARSED_DIR, DB_KIND, "*.csv"))
 
-files_to_upload = []
-for file in files:
-    if os.path.basename(file) == "example.csv":
-        continue
-    
+def upload_today_incremental_data():
+    today = datetime.now().strftime("%Y%m%d")
+
+    li_of_files = glob.glob(os.path.join(DATA_PARSED_DIR, DB_KIND, "*.csv"))
     # 빈 파일 건너뛰기
-    if os.path.getsize(file) <= 1:
-        print(f"빈 파일 건너뛰기: {os.path.basename(file)}")
-        continue
 
-    if today in file:
-        files_to_upload.append(file)
+    target_file = ""
+    for file in li_of_files:
+        if os.path.getsize(file) <= 1:
+            print(f"빈 파일 건너뛰기: {os.path.basename(file)}")
+            return
 
-print("-"*100)
-print()
-print(f"files_to_upload: {len(files_to_upload)}")
-pprint([os.path.basename(f) for f in files_to_upload])
-print()
-print("-"*100)
+        if today in file:
+            target_file = file
+    try:
+        df = pd.read_csv(target_file)
+        # print(f"df 행 수:{len(df)}")
+        # print(df.head())
+    except pd.errors.EmptyDataError:
+        print(f"빈 데이터 파일 건너뛰기: {os.path.basename(target_file)}")
+        # 폴더에서 눈에 보이진 않지만 없는 파일이 존재: ksccPatternStation_30001_31000_31.csv
 
-for file in files_to_upload:
+    for start in range(0, len(df), CHUNK_SIZE):
+        end = start + CHUNK_SIZE
+        chunk = df.iloc[start:end]
+        data_to_insert_chunk = [process_row(row) for _, row in chunk.iterrows()]
+        
+        try:
+            insert_bulk_incremental_to_transit_db(data_to_insert_chunk)
+            print(f"[{start} ~ {end-1}] 청크 ({len(data_to_insert_chunk)}개 행) 삽입 완료")
+            
+        except Exception as e:
+            print(f"[{start} ~ {end-1}] 청크 삽입 실패: {e}")
+
+
+def upload_incremental_data(file):
     try:
         df = pd.read_csv(file)
         # print(f"df 행 수:{len(df)}")
@@ -77,20 +93,19 @@ for file in files_to_upload:
     except pd.errors.EmptyDataError:
         print(f"빈 데이터 파일 건너뛰기: {os.path.basename(file)}")
         # 폴더에서 눈에 보이진 않지만 없는 파일이 존재: ksccPatternStation_30001_31000_31.csv
-        continue
-
 
     for start in range(0, len(df), CHUNK_SIZE):
         end = start + CHUNK_SIZE
         chunk = df.iloc[start:end]
         data_to_insert_chunk = [process_row(row) for _, row in chunk.iterrows()]
-
-        pprint(data_to_insert_chunk)
+        
         try:
-            insert_bulk_to_transit_db(data_to_insert_chunk)
+            insert_bulk_incremental_to_transit_db(data_to_insert_chunk)
             print(f"[{start} ~ {end-1}] 청크 ({len(data_to_insert_chunk)}개 행) 삽입 완료")
             
         except Exception as e:
             print(f"[{start} ~ {end-1}] 청크 삽입 실패: {e}")
 
 
+file = "/Users/sychoi/projects/seoul-transit-pipeline/data_parsed/postgres/ksccPatternStation_20251015_1_2000.csv"
+upload_incremental_data(file)

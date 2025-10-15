@@ -31,6 +31,27 @@ def extract_number_from_filename(filename):
         return int(m.group(1))
     return -1
 
+def merge_xml(xml_text_list):
+
+    doc_sting = """<?xml version="1.0" encoding="UTF-8"?>
+<ksccPatternStation>
+<list_total_count>294466</list_total_count>
+<RESULT>
+<CODE>INFO-000</CODE>
+<MESSAGE>정상 처리되었습니다</MESSAGE>
+</RESULT>
+    """
+    first_tree = ET.parse(xml_text_list[0])
+    first_root = first_tree.getroot()
+
+    merged_root = ET.Element(first_root.tag)
+    for xml_text in xml_text_list:
+        tree = ET.parse(StringIO(xml_text))
+        root.append(tree.getroot())
+    return ET.tostring(root, encoding="utf-8")
+
+
+
 
 def parse_xml(file):
     tree = ET.parse(file)
@@ -264,8 +285,6 @@ try:
     elif len(sys.argv) > 1 and sys.argv[1] == "single":
         xml_file = sys.argv[2]
         process_single_xml_file(xml_file)
-    elif len(sys.argv) > 1 and sys.argv[1] == "map":
-        map_xml_file_to_csv_file()
     else:
         pass
 except Exception as e:

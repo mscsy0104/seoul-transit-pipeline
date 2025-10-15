@@ -14,6 +14,7 @@ from parse_data import parse_xml, process_xml_from_text, parse_xml_from_text
 load_dotenv()
 LOGS = os.getenv("LOGS")
 DATA_DIR = os.getenv("DATA_DIR")
+DATA_PARSED_DIR = os.getenv("DATA_PARSED_DIR")
 DB_KIND = os.getenv("DB_KIND")
 
 API_KEY = os.getenv("API_KEY")
@@ -124,10 +125,12 @@ def fetch_incremental_data(total_cnt):
 
         print(f"Most recent file: {latest_file}")
         
-        parsed_data = parse_xml(latest_file)
-        create_date = int(parsed_data["CRTR_DD"].max())
-        print(f"create_date: {create_date}")
-        
+        parsed_latest_df = parse_xml(latest_file)
+        standard_create_date = int(parsed_latest_df["CRTR_DD"].max())
+        print(f"standard_create_date: {standard_create_date}")
+
+        if 'PRPS_PTRN' in parsed_latest_df.columns:
+            standard_purpose_pattern_col = parsed_latest_df["PRPS_PTRN"]        
     else:
         # warning
         print("No files found in the data directory. Check the env file.")
@@ -154,7 +157,7 @@ def fetch_incremental_data(total_cnt):
     step = 500
     end = total_cnt
 
-    data_to_download = []
+    df_li_to_download = []
     for start_idx in range(start, end + 1, step):
         end_idx = start_idx + step - 1 if start_idx + step - 1 < end else end
         # 실제 다운로드에는 start_idx, end_idx를 사용 (이후 코드와 호환)
@@ -164,58 +167,50 @@ def fetch_incremental_data(total_cnt):
         try:
             res = requests.get(url)
             res.raise_for_status()
-            # print(parse_xml_from_text(res.text))
+            parsed_df = parse_xml_from_text(res.text, f"batch_{start_idx}_{end_idx}")
+            print(f"Batch {start_idx + 1}: {len(parsed_df)} rows parsed")
 
-            print(parse_xml_from_text(res.text)["CRTR_DD"])
-            print(create_date)
-            print(parse_xml_from_text(res.text)["CRTR_DD"].astype(int).min() < create_date)
-            
-            
-            if parse_xml_from_text(res.text)["CRTR_DD"].astype(int).min() < create_date:
-                # print(f"Stop fetching data from {start_idx} to {end_idx}")
-                # print(f"because of create_date: {create_date}")
+            create_date_col = parsed_df["CRTR_DD"]
+            max_create_date = create_date_col.astype(int).max()
+            min_create_date = create_date_col.astype(int).min()
+            if max_create_date < standard_create_date and min_create_date < standard_create_date:
+                print(f"Stop fetching data from {start_idx} to {end_idx}")
+                print(f"because of standard_create_date more than {max_create_date} and {min_create_date}")
                 break
 
-            data = (start_idx, end_idx, res.text)
-            data_to_download.append(data)
+            df_li_to_download.append(parsed_df)
         except requests.exceptions.RequestException as e:
             # error
             print(f"Error fetching data from {start_idx} to {end_idx}: {e}")
             raise e
 
-
-    merged_data = []
-    for idx, data in enumerate(data_to_download):
-        start_idx, end_idx, res_text = data
-
-        parsed_data = parse_xml_from_text(res_text, f"batch_{start_idx}_{end_idx}")
-        print(f"Batch {idx + 1}: {len(parsed_data)} rows parsed")
-        
-        # merged_data에 추가
-        merged_data.append(parsed_data)
+    print(f"final end idx: {end_idx}")
     
     # 모든 데이터를 하나의 DataFrame으로 합치기
-    if merged_data:
+    if df_li_to_download:
         print("Merging all data...")
-        final_df = pd.concat(merged_data, ignore_index=True)
+        final_df = pd.concat(df_li_to_download, ignore_index=True)
         print(f"Total rows before filtering: {len(final_df)}")
         
+        # print(final_df.head())
         # create_date 필터링 (CRTR_DD 컬럼 사용)
         if 'CRTR_DD' in final_df.columns:
             # create_date와 비교 (incremental의 경우)
-            if 'create_date' in locals():
-                filter_date = str(create_date)
-                print(f"Filtering with create_date: {filter_date}")
-            else:
-                # bulk의 경우 오늘 날짜 사용
-                filter_date = datetime.now().strftime('%Y%m%d')
-                print(f"Filtering with today's date: {filter_date}")
+            filter_date = str(standard_create_date)
+            print(f"Filtering with max_create_date: {filter_date}")
+            # if
+            #     filter_date = str(standard_create_date)
+            #     print(f"Filtering with max_create_date: {filter_date}")
+            # else:
+            #     # bulk의 경우 오늘 날짜 사용
+            #     filter_date = datetime.now().strftime('%Y%m%d')
+            #     print(f"Filtering with today's date: {filter_date}")
             
             # CRTR_DD가 필터 날짜보다 작은 row들 제거
             before_filter_count = len(final_df)
             final_df = final_df[final_df['CRTR_DD'].astype(str) >= filter_date]
             after_filter_count = len(final_df)
-            
+
             print(f"Filtered out {before_filter_count - after_filter_count} rows with CRTR_DD < {filter_date}")
             print(f"Final rows after filtering: {after_filter_count}")
         else:
@@ -227,11 +222,10 @@ def fetch_incremental_data(total_cnt):
         
         final_start_idx = 1
         final_end_idx = end_idx
-        filename = os.path.join(DATA_DIR, DB_KIND, f'ksccPatternStation_{today}_{final_start_idx}_{final_end_idx}.xml')
-        # filename = os.path.join(DATA_DIR, DB_KIND, f'ksccPatternStation_{today}_{final_start_idx}_{final_end_idx}_{idx + 1}.xml')
+        filename = os.path.join(DATA_PARSED_DIR, DB_KIND, f'ksccPatternStation_{today}_{final_start_idx}_{final_end_idx}.csv')
         ensure_dir_exists(filename)
         with open(filename, "w", encoding="utf-8") as f:
-            final_df.to_xml(f, index=False, encoding="utf-8")
+            final_df.to_csv(f, index=False, encoding="utf-8")
             print(f"Saved incremental data to {filename}")
     else:
         print("No data to merge")
