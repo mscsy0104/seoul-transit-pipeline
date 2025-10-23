@@ -6,7 +6,7 @@ import glob
 import os
 from dotenv import load_dotenv
 
-from postgres_version.db.insert_bulk import insert_bulk_to_transit_db
+from postgres_version.db_postgres.insert_bulk import insert_bulk_to_transit_db
 
 load_dotenv()
 

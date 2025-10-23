@@ -2,13 +2,13 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 
-from postgres_version.db.connect import connect_postgres
-from postgres_version.db.queries import DatabaseQueries
+from postgres_version.modules.db_postgres.connect import connect_postgres
+from postgres_version.modules.db_postgres.queries import DatabaseQueries
 
 load_dotenv()
 
-SCHEMA_NAME = os.getenv("SCHEMA_NAME", "transit_schema")
-TABLE_NAME = os.getenv("TABLE_NAME", "seoul_transit_pattern")
+SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME", "transit_schema")
+TABLE_NAME = os.getenv("POSTGRES_TABLE_NAME", "seoul_transit_patterns")
 
 
 def insert_data_to_transit_db(data):

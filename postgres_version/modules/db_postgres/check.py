@@ -1,5 +1,5 @@
-from postgres_version.db.connect import connect_postgres
-from postgres_version.db.queries import DatabaseCheckQueries
+from postgres_version.db_postgres.connect import connect_postgres
+from postgres_version.db_postgres.queries import DatabaseCheckQueries
 from psycopg2 import sql
 from pprint import pprint
 # DB_NAME = "transit_db"

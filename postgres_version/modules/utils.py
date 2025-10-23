@@ -27,3 +27,17 @@ def ensure_dir_exists(filename):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
         print(f"Created directory: {dirname}")
+
+
+def extract_date_int(file_path):
+    try:
+        return int(os.path.basename(file_path).split("_")[1])
+    except (IndexError, ValueError):
+        return -1
+
+        
+def extract_number(file_path):
+    try:
+        return int(os.path.basename(file_path).split("_")[-1].split(".")[0])
+    except (IndexError, ValueError):
+        return -1

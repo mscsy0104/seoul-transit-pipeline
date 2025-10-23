@@ -7,7 +7,6 @@ import glob
 import json
 from dotenv import load_dotenv
 import re
-from pprint import pprint
 from io import StringIO
 
 from utils import ensure_dir_exists
@@ -32,7 +31,6 @@ def extract_number_from_filename(filename):
     return -1
 
 def merge_xml(xml_text_list):
-
     doc_sting = """<?xml version="1.0" encoding="UTF-8"?>
 <ksccPatternStation>
 <list_total_count>294466</list_total_count>
@@ -44,6 +42,7 @@ def merge_xml(xml_text_list):
     first_tree = ET.parse(xml_text_list[0])
     first_root = first_tree.getroot()
 
+    root = []
     merged_root = ET.Element(first_root.tag)
     for xml_text in xml_text_list:
         tree = ET.parse(StringIO(xml_text))

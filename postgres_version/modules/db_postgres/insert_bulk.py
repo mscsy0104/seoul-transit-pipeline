@@ -4,14 +4,14 @@ import psycopg2
 from psycopg2.extras import execute_values
 from datetime import datetime
 
-from postgres_version.db.connect import connect_postgres
-from postgres_version.db.queries import DatabaseQueries
+from postgres_version.modules.db_postgres.connect import connect_postgres
+from postgres_version.modules.db_postgres.queries import DatabaseQueries
 
 
 load_dotenv()
 
-SCHEMA_NAME = os.getenv("SCHEMA_NAME", "transit_schema")
-TABLE_NAME = os.getenv("TABLE_NAME", "seoul_transit_pattern")
+SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME", "transit_schema")
+TABLE_NAME = os.getenv("TABLE_NAME", "seoul_transit_patterns")
 
 def insert_bulk_to_transit_db(data):
     try:
@@ -37,9 +37,20 @@ def insert_bulk_to_transit_db(data):
     
 
 
-def insert_bulk_incremental_to_transit_db(data):
-    try:
+def insert_bulk_incremental_to_transit_db(data, conn=None):
+    """
+    증분 데이터를 벌크로 삽입합니다.
+    
+    Args:
+        data: 삽입할 데이터 리스트
+        conn: 기존 연결 객체 (None이면 새로 생성)
+    """
+    should_close_conn = False
+    if conn is None:
         conn = connect_postgres()
+        should_close_conn = True
+    
+    try:
         cursor = conn.cursor()
         query = DatabaseQueries.insert_batch_data_to_table(SCHEMA_NAME, TABLE_NAME)
         # data에 이미 created_at이 포함되어 있음
@@ -49,10 +60,8 @@ def insert_bulk_incremental_to_transit_db(data):
     except (Exception, psycopg2.Error) as e:
         conn.rollback()
         print(f"PostgreSQL 벌크 삽입 오류: {e}")
-        if conn:
-            conn.rollback()
         raise
     finally:
-        if conn:
+        if should_close_conn and conn:
             conn.close()
             print("연결이 닫혔습니다.")
